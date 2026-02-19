@@ -34,21 +34,21 @@ class SyncStockData extends Command
         $symbol = strtoupper($this->argument('symbol'));
         $this->info("Syncing data for {$symbol}...");
 
-        // 1. Get User with Token
-        $user = User::whereNotNull('stockbit_token')->first();
-        if (!$user) {
-            $this->error('No user with Stockbit token found. Please save a token in the users table first.');
+        // 1. Initialize Service (will auto-load token from Storage)
+        try {
+            $stockbit = new StockbitService();
+        } catch (\Exception $e) {
+            $this->error($e->getMessage()); // Token is required
             return 1;
         }
 
 
         try {
-            // 2. Initialize Service
-            $stockbit = new StockbitService($user->stockbit_token);
+            // 2. Fetch Data
 
             // 3. Fetch Data
-            $today = Carbon::today()->format('Y-m-d');
-            $fromDate = Carbon::today()->subMonths(3)->format('Y-m-d'); // Fetch 3 months data for broker summary if needed? 
+            $today = Carbon::today()->subDays(5)->format('Y-m-d');
+            $fromDate = Carbon::today()->subMonths(5)->format('Y-m-d'); // Fetch 3 months data for broker summary if needed? 
             // Adimology uses *current* day for broker summary usually, or a specific range.
             // Let's use today for range to get today's broker summary or last trading day.
             // If market is closed, it might return empty.
@@ -56,8 +56,10 @@ class SyncStockData extends Command
 
             $this->info('Fetching Market Detector...');
             $marketDetector = $stockbit->getMarketDetector($symbol, $today, $today);
+
             $this->info('Fetching Orderbook...');
             $orderbook = $stockbit->getOrderbook($symbol);
+
 
             $this->info('Fetching Emiten Info...');
             $emitenInfo = $stockbit->getEmitenInfo($symbol);
@@ -75,8 +77,6 @@ class SyncStockData extends Command
                 });
                 $topBroker = $brokersBuy[0];
             }
-
-            logger('Orderbook', $orderbook);
 
             // Extract Market Data
             $obData = $orderbook['data'];

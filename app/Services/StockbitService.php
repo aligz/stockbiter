@@ -14,7 +14,7 @@ class StockbitService
 
     public function __construct(?string $token = null)
     {
-        $this->token = $token;
+        $this->token = $token ?: (\Illuminate\Support\Facades\Storage::exists('stockbit_token') ? \Illuminate\Support\Facades\Storage::get('stockbit_token') : null);
     }
 
     /**

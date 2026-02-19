@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Storage;
 
 class SetStockbitToken extends Command
 {
@@ -37,38 +37,16 @@ class SetStockbitToken extends Command
             return 1;
         }
 
-        // Get the first user (create one if doesn't exist just in case, but usually exists)
-        $user = User::first();
+        // Save to Storage
+        Storage::put('stockbit_token', $token);
 
-        if (!$user) {
-            // Check if we can create a default user
-            if ($this->confirm('No user found. Create a default user?', true)) {
-                $user = User::create([
-                    'name' => 'Admin',
-                    'email' => 'admin@stockbiter.test',
-                    'password' => bcrypt('password'),
-                ]);
-                $this->info('Created default user: admin@stockbiter.test / password');
-            } else {
-                $this->error('Operation cancelled.');
-                return 1;
-            }
-        }
+        $this->info('Stockbit token saved successfully to storage!');
 
-        // Save trace
-        $user->stockbit_token = $token;
-        $user->save();
-
-        $this->info('Stockbit token saved successfully!');
-
-        // Verify it decrypts
+        // Verify it reads back
         try {
-            // Refresh model
-            $user->refresh();
-            // Access attribute to trigger decryption
-            $decrypted = $user->stockbit_token;
-            if ($decrypted === $token) {
-                $this->info('Token verification successful (encryption works).');
+            $check = Storage::get('stockbit_token');
+            if ($check === $token) {
+                $this->info('Token verification successful (storage write/read works).');
             }
         } catch (\Exception $e) {
             $this->error('Token verification failed: ' . $e->getMessage());
