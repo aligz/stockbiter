@@ -3,11 +3,11 @@
     import BookOpen from 'lucide-svelte/icons/book-open';
     import Folder from 'lucide-svelte/icons/folder';
     import LayoutGrid from 'lucide-svelte/icons/layout-grid';
+    import TrendingUp from 'lucide-svelte/icons/trending-up';
     import type { Snippet } from 'svelte';
     import AppLogo from '@/components/AppLogo.svelte';
     import NavFooter from '@/components/NavFooter.svelte';
     import NavMain from '@/components/NavMain.svelte';
-    import NavUser from '@/components/NavUser.svelte';
     import {
         Sidebar,
         SidebarContent,
@@ -19,7 +19,8 @@
     } from '@/components/ui/sidebar';
     import { toUrl } from '@/lib/utils';
     import type { NavItem } from '@/types';
-    import { dashboard } from '@/routes';
+    import { home as dashboard } from '@/routes';
+    import { index as stocks } from '@/routes/stocks';
 
     let {
         children,
@@ -32,6 +33,11 @@
             title: 'Dashboard',
             href: dashboard(),
             icon: LayoutGrid,
+        },
+        {
+            title: 'Stock Screener',
+            href: stocks(),
+            icon: TrendingUp,
         },
     ];
 
@@ -52,15 +58,19 @@
 <Sidebar collapsible="icon" variant="inset">
     <SidebarHeader>
         <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" asChild>
-                        {#snippet children(props)}
-                            <Link {...props} href={toUrl(dashboard())} class={props.class}>
-                                <AppLogo />
-                            </Link>
-                        {/snippet}
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton size="lg" asChild>
+                    {#snippet children(props)}
+                        <Link
+                            {...props}
+                            href={toUrl(dashboard())}
+                            class={props.class}
+                        >
+                            <AppLogo />
+                        </Link>
+                    {/snippet}
+                </SidebarMenuButton>
+            </SidebarMenuItem>
         </SidebarMenu>
     </SidebarHeader>
 
@@ -70,7 +80,6 @@
 
     <SidebarFooter>
         <NavFooter items={footerNavItems} />
-        <NavUser />
     </SidebarFooter>
 </Sidebar>
 {@render children?.()}
