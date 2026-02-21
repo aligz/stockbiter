@@ -30,6 +30,9 @@ class AdimologyService
      */
     public function calculate(array $marketData, array $brokerData)
     {
+        // logger('marketData', $marketData);
+        // logger('brokerData', $brokerData);
+
         $harga = $marketData['price'];
         $fraksi = $this->getFraksi($harga);
 
@@ -86,6 +89,14 @@ class AdimologyService
 
         // p = Barang Bandar / Rata rata Bid Ofer
         $p = $bandarVolume / $rataRataBidOfer;
+
+        // logger('target_realistis', [
+        //     'rataRataBidOfer' => $rataRataBidOfer,
+        //     'bandarAvgPrice' => $bandarAvgPrice,
+        //     'a' => $a,
+        //     'p' => $p,
+        //     'fraksi' => $fraksi,
+        // ]);
 
         // Target Realistis = Rata rata bandar + a + (p/2 × Fraksi)
         $targetRealistis = $bandarAvgPrice + $a + (($p / 2) * $fraksi);

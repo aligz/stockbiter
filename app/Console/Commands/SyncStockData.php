@@ -31,7 +31,7 @@ class SyncStockData extends Command
     public function handle(AdimologyService $adimologyService)
     {
         $symbol = $this->argument('symbol');
-        $today = $this->argument('date') ?? Carbon::today()->format('Y-m-d');
+        $today = $this->argument('date') ?? Carbon::today()->subDay()->format('Y-m-d');
 
         // 1. Initialize Service (will auto-load token from Storage)
         try {
@@ -89,6 +89,10 @@ class SyncStockData extends Command
             $this->info('Fetching Emiten Info...');
             $emitenInfo = $stockbit->getEmitenInfo($symbol);
 
+            // logger('marketDetector', $marketDetector);
+            // logger('orderbook', $orderbook);
+            // logger('emitenInfo', $emitenInfo);
+
             // 4. Process Data for Adimology
             // Extract Broker Data
             $conclusion = $marketDetector['data']['broker_summary']['conclusion'] ?? [];
@@ -142,6 +146,7 @@ class SyncStockData extends Command
 
             // 5. Calculate Adimology
             $results = $adimologyService->calculate($marketDataInput, $brokerDataInput);
+            // logger('results', $results);
 
             // 6. Save to Database
             $stock = Stock::updateOrCreate(
