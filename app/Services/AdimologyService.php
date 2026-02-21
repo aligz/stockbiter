@@ -88,7 +88,7 @@ class AdimologyService
         $a = $bandarAvgPrice * 0.05;
 
         // p = Barang Bandar / Rata rata Bid Ofer
-        $p = $bandarVolume / $rataRataBidOfer;
+        $p = $rataRataBidOfer > 1 ? $bandarVolume / $rataRataBidOfer : $a;
 
         // logger('target_realistis', [
         //     'rataRataBidOfer' => $rataRataBidOfer,
