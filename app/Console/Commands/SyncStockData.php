@@ -31,6 +31,7 @@ class SyncStockData extends Command
     public function handle(AdimologyService $adimologyService)
     {
         $symbol = $this->argument('symbol');
+        $today = $this->argument('date') ?? Carbon::today()->format('Y-m-d');
 
         // 1. Initialize Service (will auto-load token from Storage)
         try {
@@ -42,13 +43,22 @@ class SyncStockData extends Command
         }
 
         if ($symbol) {
-            $this->syncSymbol(strtoupper($symbol), $stockbit, $adimologyService);
+            $this->syncSymbol(strtoupper($symbol), $today, $stockbit, $adimologyService);
         } else {
-            $stocks = Stock::all();
-            $this->info('Syncing '.$stocks->count().' stocks...');
+            $stocks = Stock::whereDoesntHave('metrics', function ($query) use ($today) {
+                $query->where('date', $today);
+            })->get();
+
+            if ($stocks->isEmpty()) {
+                $this->info("All stocks have been synced for {$today}.");
+
+                return 0;
+            }
+
+            $this->info('Syncing ' . $stocks->count() . ' stocks for ' . $today . '...');
 
             foreach ($stocks as $stock) {
-                $this->syncSymbol($stock->symbol, $stockbit, $adimologyService);
+                $this->syncSymbol($stock->symbol, $today, $stockbit, $adimologyService);
                 sleep(1); // Prevent rate limiting
             }
         }
@@ -56,15 +66,20 @@ class SyncStockData extends Command
         return 0;
     }
 
-    private function syncSymbol($symbol, StockbitService $stockbit, AdimologyService $adimologyService)
+    private function syncSymbol($symbol, $today, StockbitService $stockbit, AdimologyService $adimologyService)
     {
+        // Check if already synced today
+        $stock = Stock::where('symbol', $symbol)->first();
+        if ($stock && StockMetric::where('stock_id', $stock->id)->where('date', $today)->exists()) {
+            $this->info("Data for {$symbol} on {$today} already exists. Skipping...");
+
+            return;
+        }
+
         $this->info("Syncing data for {$symbol}...");
 
         try {
             // 2. Fetch Data
-            // $today = Carbon::today()->subDays(5)->format('Y-m-d');
-            $today = $this->argument('date') ?? Carbon::today()->subDay()->format('Y-m-d');
-
             $this->info('Fetching Market Detector...');
             $marketDetector = $stockbit->getMarketDetector($symbol, $today, $today);
 
@@ -108,8 +123,8 @@ class SyncStockData extends Command
             $offers = $obData['offer'] ?? [];
             $bids = $obData['bid'] ?? [];
 
-            $highestOffer = ! empty($offers) ? max(array_column($offers, 'price')) : $price;
-            $lowestBid = ! empty($bids) ? min(array_column($bids, 'price')) : $price;
+            $highestOffer = !empty($offers) ? max(array_column($offers, 'price')) : $price;
+            $lowestBid = !empty($bids) ? min(array_column($bids, 'price')) : $price;
 
             // Prepare for Service
             $marketDataInput = [
@@ -169,7 +184,7 @@ class SyncStockData extends Command
             $this->info("Successfully synced {$symbol}! Target Price: {$results['target_price']} (MOS: {$results['mos']}%)");
 
         } catch (\Exception $e) {
-            $this->error("Error syncing {$symbol}: ".$e->getMessage());
+            $this->error("Error syncing {$symbol}: " . $e->getMessage());
         }
     }
 }

@@ -3,13 +3,14 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class StockbitService
 {
     protected string $baseUrl = 'https://exodus.stockbit.com';
+
     protected string $authUrl = 'https://stockbit.com';
+
     protected ?string $token;
 
     public function __construct(?string $token = null)
@@ -22,13 +23,13 @@ class StockbitService
      */
     protected function getHeaders(): array
     {
-        if (!$this->token) {
+        if (! $this->token) {
             throw new \Exception('Stockbit token is required.');
         }
 
         return [
             'accept' => 'application/json',
-            'authorization' => 'Bearer ' . $this->token,
+            'authorization' => 'Bearer '.$this->token,
             'origin' => 'https://stockbit.com',
             'referer' => 'https://stockbit.com/',
             'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',

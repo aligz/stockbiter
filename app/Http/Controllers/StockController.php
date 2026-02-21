@@ -63,6 +63,26 @@ class StockController extends Controller
         return redirect()->back()->with('success', 'Stock added successfully.');
     }
 
+    public function show(Stock $stock)
+    {
+        $stock->load([
+            'metrics' => function ($query) {
+                $query->orderByDesc('date');
+            },
+        ]);
+
+        // Calculate some basic stats specifically for the show page if needed,
+        // or just let frontend handle the array of metrics.
+        // Pre-calculate latest metric for convenience if needed.
+        $latestMetric = $stock->metrics->first();
+
+        return Inertia::render('Stocks/Show', [
+            'stock' => $stock,
+            'metrics' => $stock->metrics,
+            'latestMetric' => $latestMetric,
+        ]);
+    }
+
     public function destroy(Stock $stock)
     {
         $stock->delete();

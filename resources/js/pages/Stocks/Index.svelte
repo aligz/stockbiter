@@ -1,6 +1,6 @@
 <script lang="ts">
     import AppHeaderLayout from '@/layouts/app/AppHeaderLayout.svelte';
-    import { router } from '@inertiajs/svelte';
+    import { router, inertia } from '@inertiajs/svelte';
     import {
         store as storeRoute,
         destroy as destroyRoute,
@@ -70,8 +70,10 @@
                         <input
                             type="text"
                             bind:value={symbol}
+                            maxlength="4"
+                            pattern="[a-zA-Z]+"
                             placeholder="Enter Stock Symbol (e.g. BBCA)"
-                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-white"
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-indigo-500 uppercase focus:ring-indigo-500 sm:text-sm dark:text-white px-2 py-2"
                         />
                     </div>
                     <button
@@ -111,7 +113,7 @@
                                 <th
                                     scope="col"
                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Harga</th
+                                    >Harga Open</th
                                 >
                                 <th
                                     scope="col"
@@ -169,9 +171,11 @@
                                     </td>
                                     <td class="px-4 py-4 whitespace-nowrap">
                                         <div class="flex flex-col">
-                                            <span
-                                                class="text-base font-bold text-purple-600 dark:text-purple-400"
-                                                >{stock.symbol}</span
+                                            <a
+                                                href="/stocks/{stock.symbol}"
+                                                use:inertia
+                                                class="text-base font-bold text-purple-600 dark:text-purple-400 hover:underline"
+                                                >{stock.symbol}</a
                                             >
                                             <span
                                                 class="text-xs text-gray-500 dark:text-gray-400 truncate w-32"

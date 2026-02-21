@@ -28,12 +28,13 @@ class SetStockbitToken extends Command
     {
         $token = $this->argument('token');
 
-        if (!$token) {
+        if (! $token) {
             $token = $this->ask('Please enter your Stockbit token');
         }
 
         if (empty($token)) {
             $this->error('Token cannot be empty.');
+
             return 1;
         }
 
@@ -49,7 +50,7 @@ class SetStockbitToken extends Command
                 $this->info('Token verification successful (storage write/read works).');
             }
         } catch (\Exception $e) {
-            $this->error('Token verification failed: ' . $e->getMessage());
+            $this->error('Token verification failed: '.$e->getMessage());
         }
 
         return 0;
