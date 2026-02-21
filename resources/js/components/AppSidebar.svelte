@@ -55,7 +55,7 @@
     ];
 </script>
 
-<Sidebar collapsible="icon" variant="inset">
+<!-- <Sidebar collapsible="icon" variant="inset">
     <SidebarHeader>
         <SidebarMenu>
             <SidebarMenuItem>
@@ -81,5 +81,5 @@
     <SidebarFooter>
         <NavFooter items={footerNavItems} />
     </SidebarFooter>
-</Sidebar>
+</Sidebar> -->
 {@render children?.()}

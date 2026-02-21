@@ -116,7 +116,7 @@ class SyncStockData extends Command
             $price = (float) $obData['close'];
             $dayHigh = isset($obData['high']) ? (float) $obData['high'] : $price;
             $change = (float) $obData['change'];
-            $changePercentage = (float) @$obData['change_percentage']; // e.g. "1.25"
+            $changePercentage = (float) @$obData['percentage_change']; // e.g. "1.25"
             $marketCap = (int) ($obData['market_cap'] ?? 0);
             $volume = (int) ($obData['volume'] ?? 0);
 
