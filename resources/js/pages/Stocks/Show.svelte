@@ -55,6 +55,12 @@
                         class="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 flex items-center space-x-3"
                     >
                         <span>{stock.symbol}</span>
+                        {#if stock.is_fca}
+                            <span
+                                class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800"
+                                >FCA</span
+                            >
+                        {/if}
                         {#if stock.sector}
                             <span
                                 class="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs rounded-full"

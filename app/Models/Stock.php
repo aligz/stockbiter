@@ -15,7 +15,20 @@ class Stock extends Model
         'symbol',
         'company_name',
         'sector',
+        'is_fca',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_fca' => 'boolean',
+        ];
+    }
 
     /**
      * Get the metrics for the stock.

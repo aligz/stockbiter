@@ -149,11 +149,17 @@ class SyncStockData extends Command
             // logger('results', $results);
 
             // 6. Save to Database
+            $isFca = false;
+            if (isset($emitenInfo['data']['indexes']) && is_array($emitenInfo['data']['indexes'])) {
+                $isFca = in_array('Pemantauan-Khusus', $emitenInfo['data']['indexes']);
+            }
+
             $stock = Stock::updateOrCreate(
                 ['symbol' => $symbol],
                 [
                     'company_name' => $emitenInfo['data']['name'] ?? $symbol,
                     'sector' => $emitenInfo['data']['sector'] ?? null,
+                    'is_fca' => $isFca,
                 ]
             );
 

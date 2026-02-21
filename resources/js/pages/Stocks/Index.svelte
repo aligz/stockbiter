@@ -196,12 +196,22 @@
                                     </td>
                                     <td class="px-4 py-4 whitespace-nowrap">
                                         <div class="flex flex-col">
-                                            <a
-                                                href="/stocks/{stock.symbol}"
-                                                use:inertia
-                                                class="text-base font-bold text-purple-600 dark:text-purple-400 hover:underline"
-                                                >{stock.symbol}</a
+                                            <div
+                                                class="flex items-center space-x-2"
                                             >
+                                                <a
+                                                    href="/stocks/{stock.symbol}"
+                                                    use:inertia
+                                                    class="text-base font-bold text-purple-600 dark:text-purple-400 hover:underline"
+                                                    >{stock.symbol}</a
+                                                >
+                                                {#if stock.is_fca}
+                                                    <span
+                                                        class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800"
+                                                        >FCA</span
+                                                    >
+                                                {/if}
+                                            </div>
                                             <span
                                                 class="text-xs text-gray-500 dark:text-gray-400 truncate w-32"
                                                 >{stock.sector ??

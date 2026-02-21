@@ -26,6 +26,7 @@ class StockController extends Controller
                 return [
                     'id' => $stock->id,
                     'symbol' => $stock->symbol,
+                    'is_fca' => $stock->is_fca,
                     'company_name' => $stock->company_name,
                     'sector' => $stock->sector,
                     'price' => $price,
