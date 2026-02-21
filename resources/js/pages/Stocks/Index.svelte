@@ -175,11 +175,11 @@
                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                                     >Avg Bandar</th
                                 >
-                                <th
+                                <!-- <th
                                     scope="col"
                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                                     ><span class="sr-only">Manage</span></th
-                                >
+                                > -->
                             </tr>
                         </thead>
                         <tbody
@@ -353,10 +353,10 @@
                                             >
                                         </div>
                                     </td>
-                                    <td
+                                    <!-- <td
                                         class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium"
-                                    >
-                                        <button
+                                    > -->
+                                    <!-- <button
                                             on:click={() => remove(stock)}
                                             class="text-red-500 hover:text-red-600 transition-colors"
                                             title="Delete"
@@ -373,8 +373,8 @@
                                                     clip-rule="evenodd"
                                                 />
                                             </svg>
-                                        </button>
-                                    </td>
+                                        </button> -->
+                                    <!-- </td> -->
                                 </tr>
                             {:else}
                                 <tr>

@@ -52,8 +52,12 @@ class StockController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'symbol' => strtoupper($request->symbol),
+        ]);
+
         $request->validate([
-            'symbol' => ['required', 'string', 'unique:stocks,symbol'],
+            'symbol' => ['required', 'string', 'unique:stocks'],
         ]);
 
         Stock::create([
