@@ -24,4 +24,9 @@ class Stock extends Model
     {
         return $this->hasMany(StockMetric::class);
     }
+
+    public function latestMetric()
+    {
+        return $this->hasOne(StockMetric::class)->latestOfMany();
+    }
 }

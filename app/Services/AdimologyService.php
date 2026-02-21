@@ -9,14 +9,19 @@ class AdimologyService
      */
     public function getFraksi(float $price): int
     {
-        if ($price < 200)
+        if ($price < 200) {
             return 1;
-        if ($price >= 200 && $price < 500)
+        }
+        if ($price >= 200 && $price < 500) {
             return 2;
-        if ($price >= 500 && $price < 2000)
+        }
+        if ($price >= 500 && $price < 2000) {
             return 5;
-        if ($price >= 2000 && $price < 5000)
+        }
+        if ($price >= 2000 && $price < 5000) {
             return 10;
+        }
+
         return 25; // >= 5000
     }
 
@@ -32,19 +37,21 @@ class AdimologyService
         $arb = $marketData['bid_lowest'];   // Proxy for ARB
 
         // Safety check for division by zero if fraksi is 0 (unlikely)
-        if ($fraksi == 0)
+        if ($fraksi == 0) {
             $fraksi = 1;
+        }
 
         // Total Papan = (ARA - ARB) / Fraksi
         $totalPapan = ($ara - $arb) / $fraksi;
-        if ($totalPapan == 0)
-            $totalPapan = 1; // Avoid division by zero
+        if ($totalPapan == 0) {
+            $totalPapan = 1;
+        } // Avoid division by zero
 
         // Rata rata Bid Ofer = (Total Bid + Total Offer) / Total Papan
         $totalBidInfo = $marketData['total_bid_volume']; // In Lots
         $totalOfferInfo = $marketData['total_offer_volume']; // In Lots
 
-        // If data is from orderbook, they are usually in Lots. 
+        // If data is from orderbook, they are usually in Lots.
         // Adimology TS code divides by 100? No, TS code: `marketData.totalBid / 100`.
         // Wait, let's check TS code again.
         // `marketData.totalBid: parseLot(obData.total_bid_offer.bid.lot)` -> parseLot removes commas and returns Number.
@@ -61,8 +68,9 @@ class AdimologyService
         $totalOfferInput = $totalOfferInfo / 100;
 
         $rataRataBidOfer = ($totalBidInput + $totalOfferInput) / $totalPapan;
-        if ($rataRataBidOfer == 0)
+        if ($rataRataBidOfer == 0) {
             $rataRataBidOfer = 1;
+        }
 
         $bandarAvgPrice = $brokerData['avg_price'];
         $bandarVolume = $brokerData['volume']; // In Lots usually?
@@ -98,6 +106,7 @@ class AdimologyService
             'rata_rata_bid_offer' => round($rataRataBidOfer),
             'a' => round($a),
             'p' => round($p),
+            'target_r1' => round($targetRealistis),
             'target_realistis' => round($targetRealistis),
             'target_price' => round($targetMax), // Using Target Max as main target
             'mos' => round($mos, 2),

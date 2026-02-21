@@ -30,6 +30,9 @@ class StockMetric extends Model
         'target_price',
         'target_action',
         'mos',
+        'target_r1',
+        'day_high',
+        'bandar_status',
     ];
 
     /**
@@ -49,6 +52,8 @@ class StockMetric extends Model
             'bid_lowest' => 'decimal:2',
             'target_price' => 'decimal:2',
             'mos' => 'decimal:2',
+            'target_r1' => 'decimal:2',
+            'day_high' => 'decimal:2',
         ];
     }
 

@@ -1,27 +1,92 @@
 <script lang="ts">
     import AppHeaderLayout from '@/layouts/app/AppHeaderLayout.svelte';
+    import { router } from '@inertiajs/svelte';
+    import {
+        store as storeRoute,
+        destroy as destroyRoute,
+    } from '@/actions/App/Http/Controllers/StockController';
 
-    export let metrics: any[] = [];
+    export let stocks: any[] = [];
+    export let errors: any = {};
+
+    let symbol = '';
+    let processing = false;
+
+    function submit() {
+        processing = true;
+        router.post(
+            storeRoute.url(),
+            { symbol },
+            {
+                onSuccess: () => {
+                    symbol = '';
+                },
+                onFinish: () => {
+                    processing = false;
+                },
+            },
+        );
+    }
+
+    function remove(stock: any) {
+        if (confirm(`Are you sure you want to remove ${stock.symbol}?`)) {
+            router.delete(destroyRoute.url(stock.id));
+        }
+    }
+
+    function calcPct(val: number, base: number) {
+        if (!val || !base) return null;
+        const pct = ((val - base) / base) * 100;
+        return pct > 0 ? `+${pct.toFixed(1)}%` : `${pct.toFixed(1)}%`;
+    }
 </script>
 
 <svelte:head>
-    <title>Stock Metrics</title>
+    <title>Stock Watchlist</title>
 </svelte:head>
 
 <AppHeaderLayout>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center mb-8 px-4 sm:px-0">
-                <h1
-                    class="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
+            <div
+                class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 px-4 sm:px-0 space-y-4 sm:space-y-0"
+            >
+                <div>
+                    <h1
+                        class="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
+                    >
+                        Stock Watchlist
+                    </h1>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Manage stocks to be synced and analyzed.
+                    </p>
+                </div>
+
+                <form
+                    on:submit|preventDefault={submit}
+                    class="flex items-center space-x-2 w-full sm:w-auto"
                 >
-                    Market Opportunities
-                </h1>
-                <p class="text-sm text-gray-500">
-                    Last updated: {metrics.length > 0
-                        ? metrics[0].last_updated
-                        : '-'}
-                </p>
+                    <div class="relative rounded-md shadow-sm flex-grow">
+                        <input
+                            type="text"
+                            bind:value={symbol}
+                            placeholder="Enter Stock Symbol (e.g. BBCA)"
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-white"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                    >
+                        {processing ? 'Adding...' : 'Add Stock'}
+                    </button>
+                    {#if errors?.symbol}
+                        <div class="absolute top-12 text-xs text-red-600">
+                            {errors.symbol}
+                        </div>
+                    {/if}
+                </form>
             </div>
 
             <div
@@ -35,155 +100,268 @@
                             <tr>
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Symbol</th
+                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Date ↓</th
                                 >
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Price</th
+                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Emiten</th
                                 >
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Change</th
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Harga</th
                                 >
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Target Price</th
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Target R1</th
                                 >
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >MOS</th
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Target Max</th
                                 >
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Action</th
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Max Harga</th
                                 >
                                 <th
                                     scope="col"
-                                    class="px-6 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Date</th
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Close Harga</th
+                                >
+                                <th
+                                    scope="col"
+                                    class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Bandar</th
+                                >
+                                <th
+                                    scope="col"
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Vol Bandar</th
+                                >
+                                <th
+                                    scope="col"
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Avg Bandar</th
+                                >
+                                <th
+                                    scope="col"
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    ><span class="sr-only">Manage</span></th
                                 >
                             </tr>
                         </thead>
                         <tbody
                             class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
                         >
-                            {#each metrics as metric}
+                            {#each stocks as stock}
                                 <tr
                                     class="hover:bg-gray-50 dark:hover:bg-gray-700/25 transition-colors"
                                 >
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white"
+                                    >
+                                        {stock.last_updated}
+                                    </td>
+                                    <td class="px-4 py-4 whitespace-nowrap">
                                         <div class="flex flex-col">
                                             <span
-                                                class="text-base font-bold text-gray-900 dark:text-white"
-                                                >{metric.symbol}</span
+                                                class="text-base font-bold text-purple-600 dark:text-purple-400"
+                                                >{stock.symbol}</span
                                             >
                                             <span
-                                                class="text-xs text-gray-500 dark:text-gray-400"
-                                                >{metric.company_name}</span
+                                                class="text-xs text-gray-500 dark:text-gray-400 truncate w-32"
+                                                >{stock.sector ??
+                                                    stock.company_name ??
+                                                    '-'}</span
                                             >
                                         </div>
                                     </td>
                                     <td
-                                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-gray-200"
+                                        class="px-4 py-4 whitespace-nowrap text-right text-base font-bold text-gray-900 dark:text-white"
                                     >
-                                        {Number(metric.price).toLocaleString(
-                                            'id-ID',
-                                        )}
+                                        {stock.prev_close
+                                            ? Number(
+                                                  stock.prev_close,
+                                              ).toLocaleString('id-ID')
+                                            : '-'}
                                     </td>
                                     <td
-                                        class="px-6 py-4 whitespace-nowrap text-right text-sm"
+                                        class="px-4 py-4 whitespace-nowrap text-right"
                                     >
-                                        <span
-                                            class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                Number(
-                                                    metric.change_percentage,
-                                                ) >= 0
-                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                            }`}
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-base font-bold text-green-500"
+                                                >{stock.target_r1
+                                                    ? Number(
+                                                          stock.target_r1,
+                                                      ).toLocaleString('id-ID')
+                                                    : '-'}</span
+                                            >
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(
+                                                    stock.target_r1,
+                                                    stock.prev_close,
+                                                ) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-right"
+                                    >
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-base font-bold text-red-500"
+                                                >{stock.target_max
+                                                    ? Number(
+                                                          stock.target_max,
+                                                      ).toLocaleString('id-ID')
+                                                    : '-'}</span
+                                            >
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(
+                                                    stock.target_max,
+                                                    stock.prev_close,
+                                                ) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-right"
+                                    >
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-base font-bold text-orange-500"
+                                                >{stock.day_high
+                                                    ? Number(
+                                                          stock.day_high,
+                                                      ).toLocaleString('id-ID')
+                                                    : '-'}</span
+                                            >
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(
+                                                    stock.day_high,
+                                                    stock.prev_close,
+                                                ) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-right"
+                                    >
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-base font-bold text-yellow-500"
+                                                >{stock.close
+                                                    ? Number(
+                                                          stock.close,
+                                                      ).toLocaleString('id-ID')
+                                                    : '-'}</span
+                                            >
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(
+                                                    stock.close,
+                                                    stock.prev_close,
+                                                ) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-center"
+                                    >
+                                        <div
+                                            class="flex items-center justify-center space-x-1"
                                         >
-                                            {Number(metric.change_percentage) >
-                                            0
-                                                ? '+'
-                                                : ''}{Number(
-                                                metric.change_percentage,
-                                            )}%
-                                        </span>
+                                            <span
+                                                class="text-sm font-bold text-gray-900 dark:text-white"
+                                                >{stock.bandar_code ??
+                                                    '-'}</span
+                                            >
+                                            {#if stock.bandar_status}
+                                                <span
+                                                    class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                                >
+                                                    {stock.bandar_status}
+                                                </span>
+                                            {/if}
+                                        </div>
                                     </td>
                                     <td
-                                        class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-600 dark:text-gray-300 font-medium"
+                                        class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white"
                                     >
-                                        {Number(
-                                            metric.target_price,
-                                        ).toLocaleString('id-ID')}
+                                        {stock.bandar_vol
+                                            ? Number(
+                                                  stock.bandar_vol,
+                                              ).toLocaleString('en-US')
+                                            : '-'}
                                     </td>
                                     <td
-                                        class="px-6 py-4 whitespace-nowrap text-right text-sm"
+                                        class="px-4 py-4 whitespace-nowrap text-right"
                                     >
-                                        <span
-                                            class={`font-bold ${
-                                                Number(metric.mos) > 0
-                                                    ? 'text-green-600 dark:text-green-400'
-                                                    : 'text-gray-500 dark:text-gray-400'
-                                            }`}
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-base font-bold text-gray-900 dark:text-white"
+                                                >{stock.bandar_avg
+                                                    ? Number(
+                                                          stock.bandar_avg,
+                                                      ).toLocaleString('id-ID')
+                                                    : '-'}</span
+                                            >
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(
+                                                    stock.prev_close,
+                                                    stock.bandar_avg,
+                                                ) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium"
+                                    >
+                                        <button
+                                            on:click={() => remove(stock)}
+                                            class="text-red-500 hover:text-red-600 transition-colors"
+                                            title="Delete"
                                         >
-                                            {Number(metric.mos)}%
-                                        </span>
-                                    </td>
-                                    <td
-                                        class="px-6 py-4 whitespace-nowrap text-center text-sm"
-                                    >
-                                        <span
-                                            class={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                metric.target_action ===
-                                                'Accumulate'
-                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800'
-                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600'
-                                            }`}
-                                        >
-                                            {metric.target_action}
-                                        </span>
-                                    </td>
-                                    <td
-                                        class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-400 dark:text-gray-500"
-                                    >
-                                        {metric.last_updated}
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                class="h-5 w-5"
+                                                viewBox="0 0 20 20"
+                                                fill="currentColor"
+                                            >
+                                                <path
+                                                    fill-rule="evenodd"
+                                                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                                    clip-rule="evenodd"
+                                                />
+                                            </svg>
+                                        </button>
                                     </td>
                                 </tr>
                             {:else}
                                 <tr>
                                     <td
-                                        colspan="7"
+                                        colspan="11"
                                         class="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
                                     >
                                         <div
                                             class="flex flex-col items-center justify-center space-y-2"
                                         >
-                                            <svg
-                                                class="h-10 w-10 text-gray-400"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                                                />
-                                            </svg>
                                             <p class="text-base font-medium">
-                                                No market data available
+                                                No stocks in watchlist
                                             </p>
                                             <p class="text-sm">
-                                                Run sync to fetch latest stock
-                                                metrics
+                                                Add a symbol above to start
+                                                tracking
                                             </p>
                                         </div>
                                     </td>

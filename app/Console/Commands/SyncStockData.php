@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\Stock;
 use App\Models\StockMetric;
-use App\Models\User;
 use App\Services\AdimologyService;
 use App\Services\StockbitService;
 use Carbon\Carbon;
@@ -17,7 +16,7 @@ class SyncStockData extends Command
      *
      * @var string
      */
-    protected $signature = 'stock:sync {symbol}';
+    protected $signature = 'stock:sync {symbol?} {date?}';
 
     /**
      * The console command description.
@@ -31,28 +30,40 @@ class SyncStockData extends Command
      */
     public function handle(AdimologyService $adimologyService)
     {
-        $symbol = strtoupper($this->argument('symbol'));
-        $this->info("Syncing data for {$symbol}...");
+        $symbol = $this->argument('symbol');
 
         // 1. Initialize Service (will auto-load token from Storage)
         try {
-            $stockbit = new StockbitService();
+            $stockbit = new StockbitService;
         } catch (\Exception $e) {
             $this->error($e->getMessage()); // Token is required
+
             return 1;
         }
 
+        if ($symbol) {
+            $this->syncSymbol(strtoupper($symbol), $stockbit, $adimologyService);
+        } else {
+            $stocks = Stock::all();
+            $this->info('Syncing '.$stocks->count().' stocks...');
+
+            foreach ($stocks as $stock) {
+                $this->syncSymbol($stock->symbol, $stockbit, $adimologyService);
+                sleep(1); // Prevent rate limiting
+            }
+        }
+
+        return 0;
+    }
+
+    private function syncSymbol($symbol, StockbitService $stockbit, AdimologyService $adimologyService)
+    {
+        $this->info("Syncing data for {$symbol}...");
 
         try {
             // 2. Fetch Data
-
-            // 3. Fetch Data
-            $today = Carbon::today()->subDays(5)->format('Y-m-d');
-            $fromDate = Carbon::today()->subMonths(5)->format('Y-m-d'); // Fetch 3 months data for broker summary if needed? 
-            // Adimology uses *current* day for broker summary usually, or a specific range.
-            // Let's use today for range to get today's broker summary or last trading day.
-            // If market is closed, it might return empty.
-            // For now let's use today.
+            // $today = Carbon::today()->subDays(5)->format('Y-m-d');
+            $today = $this->argument('date') ?? Carbon::today()->subDay()->format('Y-m-d');
 
             $this->info('Fetching Market Detector...');
             $marketDetector = $stockbit->getMarketDetector($symbol, $today, $today);
@@ -60,41 +71,45 @@ class SyncStockData extends Command
             $this->info('Fetching Orderbook...');
             $orderbook = $stockbit->getOrderbook($symbol);
 
-
             $this->info('Fetching Emiten Info...');
             $emitenInfo = $stockbit->getEmitenInfo($symbol);
 
             // 4. Process Data for Adimology
             // Extract Broker Data
+            $conclusion = $marketDetector['data']['broker_summary']['conclusion'] ?? [];
+            $bandarStatus = $conclusion['status'] ?? null;
+
             $brokersBuy = $marketDetector['data']['broker_summary']['brokers_buy'] ?? [];
             if (empty($brokersBuy)) {
-                $this->warn('No broker data found (Market might be closed or no transaction). Using 0 values.');
-                $topBroker = null;
-            } else {
-                // Sort by BVal (Value) Descending
-                usort($brokersBuy, function ($a, $b) {
-                    return $b['bval'] - $a['bval'];
-                });
-                $topBroker = $brokersBuy[0];
+                $this->warn("No broker data found for {$symbol} (Market might be closed or no transaction). Skipping...");
+
+                return;
             }
+
+            // Sort by BVal (Value) Descending
+            usort($brokersBuy, function ($a, $b) {
+                return $b['bval'] - $a['bval'];
+            });
+            $topBroker = $brokersBuy[0];
 
             // Extract Market Data
             $obData = $orderbook['data'];
             $price = (float) $obData['close'];
+            $dayHigh = isset($obData['high']) ? (float) $obData['high'] : $price;
             $change = (float) $obData['change'];
             $changePercentage = (float) @$obData['change_percentage']; // e.g. "1.25"
             $marketCap = (int) ($obData['market_cap'] ?? 0);
             $volume = (int) ($obData['volume'] ?? 0);
 
-            $totalBid = (int) str_replace(',', '', $obData['total_bid_offer']['bid']['lot']);
+            $totalBid = (int) str_replace(',', '', $obData['total_bid_offer']['bid']['lot'] ?? '0');
             $totalOffer = (int) str_replace(',', '', $obData['total_bid_offer']['offer']['lot']);
 
             // ARA/ARB Proxy
             $offers = $obData['offer'] ?? [];
             $bids = $obData['bid'] ?? [];
 
-            $highestOffer = !empty($offers) ? max(array_column($offers, 'price')) : $price;
-            $lowestBid = !empty($bids) ? min(array_column($bids, 'price')) : $price;
+            $highestOffer = ! empty($offers) ? max(array_column($offers, 'price')) : $price;
+            $lowestBid = ! empty($bids) ? min(array_column($bids, 'price')) : $price;
 
             // Prepare for Service
             $marketDataInput = [
@@ -135,13 +150,16 @@ class SyncStockData extends Command
                     'market_cap' => $marketCap,
                     'volume' => $volume,
                     'bandar_code' => $topBroker ? $topBroker['netbs_broker_code'] : null,
+                    'bandar_status' => $bandarStatus,
                     'bandar_avg_price' => $brokerDataInput['avg_price'],
                     'bandar_volume' => $brokerDataInput['volume'],
                     'total_bid_volume' => $totalBid,
                     'total_offer_volume' => $totalOffer,
                     'offer_highest' => $marketDataInput['offer_highest'],
                     'bid_lowest' => $marketDataInput['bid_lowest'],
+                    'day_high' => $dayHigh,
                     'fraksi' => $results['fraksi'],
+                    'target_r1' => $results['target_r1'],
                     'target_price' => $results['target_price'],
                     'target_action' => $results['action'],
                     'mos' => $results['mos'],
@@ -151,10 +169,7 @@ class SyncStockData extends Command
             $this->info("Successfully synced {$symbol}! Target Price: {$results['target_price']} (MOS: {$results['mos']}%)");
 
         } catch (\Exception $e) {
-            $this->error("Error syncing {$symbol}: " . $e->getMessage());
-            return 1;
+            $this->error("Error syncing {$symbol}: ".$e->getMessage());
         }
-
-        return 0;
     }
 }
