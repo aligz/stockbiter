@@ -11,6 +11,18 @@
 
     let symbol = '';
     let processing = false;
+    let searchQuery = '';
+
+    $: filteredStocks = stocks.filter(
+        (s) =>
+            s.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (s.company_name &&
+                s.company_name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase())) ||
+            (s.sector &&
+                s.sector.toLowerCase().includes(searchQuery.toLowerCase())),
+    );
 
     function submit() {
         processing = true;
@@ -48,43 +60,56 @@
 <AppHeaderLayout>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="mb-6 px-4 sm:px-0">
+                <h1
+                    class="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
+                >
+                    Stock Watchlist
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">
+                    Calculated based on Adimology's stock prediction.
+                </p>
+            </div>
+
             <div
-                class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 px-4 sm:px-0 space-y-4 sm:space-y-0"
+                class="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 px-4 sm:px-0"
             >
-                <div>
-                    <h1
-                        class="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
-                    >
-                        Stock Watchlist
-                    </h1>
-                    <p class="text-sm text-gray-500 mt-1">
-                        Manage stocks to be synced and analyzed.
-                    </p>
+                <div class="w-full md:w-1/3 relative">
+                    <input
+                        type="text"
+                        bind:value={searchQuery}
+                        maxlength="4"
+                        pattern="[a-zA-Z]+"
+                        placeholder="Search by symbol, name, or sector..."
+                        class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-white px-3 py-2 shadow-sm"
+                    />
                 </div>
 
                 <form
                     on:submit|preventDefault={submit}
-                    class="flex items-center space-x-2 w-full sm:w-auto"
+                    class="flex items-center space-x-2 w-full md:w-auto relative"
                 >
-                    <div class="relative rounded-md shadow-sm flex-grow">
+                    <div class="rounded-md shadow-sm w-full md:w-auto">
                         <input
                             type="text"
                             bind:value={symbol}
                             maxlength="4"
                             pattern="[a-zA-Z]+"
-                            placeholder="Enter Stock Symbol (e.g. BBCA)"
-                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-indigo-500 uppercase focus:ring-indigo-500 sm:text-sm dark:text-white px-2 py-2"
+                            placeholder="Add Stock (e.g BBCA)"
+                            class="block w-full uppercase rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-white px-3 py-2 shadow-sm"
                         />
                     </div>
                     <button
                         type="submit"
                         disabled={processing}
-                        class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                        class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 h-[38px] whitespace-nowrap"
                     >
-                        {processing ? 'Adding...' : 'Add Stock'}
+                        {processing ? '...' : '+ Add'}
                     </button>
                     {#if errors?.symbol}
-                        <div class="absolute top-12 text-xs text-red-600">
+                        <div
+                            class="absolute top-10 right-0 text-xs text-red-600"
+                        >
                             {errors.symbol}
                         </div>
                     {/if}
@@ -160,7 +185,7 @@
                         <tbody
                             class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
                         >
-                            {#each stocks as stock}
+                            {#each filteredStocks as stock}
                                 <tr
                                     class="hover:bg-gray-50 dark:hover:bg-gray-700/25 transition-colors"
                                 >
@@ -361,11 +386,19 @@
                                             class="flex flex-col items-center justify-center space-y-2"
                                         >
                                             <p class="text-base font-medium">
-                                                No stocks in watchlist
+                                                {#if stocks.length === 0}
+                                                    No stocks in watchlist
+                                                {:else}
+                                                    No matching stocks found
+                                                {/if}
                                             </p>
                                             <p class="text-sm">
-                                                Add a symbol above to start
-                                                tracking
+                                                {#if stocks.length === 0}
+                                                    Add a symbol above to start
+                                                    tracking
+                                                {:else}
+                                                    Try a different search term
+                                                {/if}
                                             </p>
                                         </div>
                                     </td>
