@@ -185,7 +185,7 @@
                         <tbody
                             class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
                         >
-                            {#each filteredStocks as stock}
+                            {#each filteredStocks as stock (stock.symbol)}
                                 <tr
                                     class="hover:bg-gray-50 dark:hover:bg-gray-700/25 transition-colors"
                                 >
