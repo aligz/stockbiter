@@ -157,6 +157,7 @@
                         <input
                             type="text"
                             bind:value={symbol}
+                            minlength="4"
                             maxlength="4"
                             pattern="[a-zA-Z]+"
                             placeholder="Add Stock (e.g BBCA)"

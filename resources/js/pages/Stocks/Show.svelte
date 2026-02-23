@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { inertia, router } from '@inertiajs/svelte';
+    import { inertia } from '@inertiajs/svelte';
     import AppHeaderLayout from '@/layouts/app/AppHeaderLayout.svelte';
 
     export let stock: any;
@@ -54,7 +54,14 @@
                     <h1
                         class="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 flex items-center space-x-3"
                     >
-                        <span>{stock.symbol}</span>
+                        <a
+                            href={`https://stockbit.com/symbol/${stock.symbol}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:underline hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        >
+                            {stock.symbol}
+                        </a>
                         {#if stock.is_fca}
                             <span
                                 class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800"
@@ -264,7 +271,7 @@
                         <tbody
                             class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
                         >
-                            {#each metrics as metric}
+                            {#each metrics as metric (metric.date)}
                                 <tr
                                     class="hover:bg-gray-50 dark:hover:bg-gray-700/25 transition-colors"
                                 >

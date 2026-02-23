@@ -58,7 +58,7 @@ class StockController extends Controller
         ]);
 
         $request->validate([
-            'symbol' => ['required', 'string', 'unique:stocks'],
+            'symbol' => ['required', 'string', 'size:4', 'unique:stocks'],
         ]);
 
         Stock::create([
