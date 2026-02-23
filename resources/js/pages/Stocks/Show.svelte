@@ -1,6 +1,6 @@
 <script lang="ts">
-    import AppHeaderLayout from '@/layouts/app/AppHeaderLayout.svelte';
     import { inertia, router } from '@inertiajs/svelte';
+    import AppHeaderLayout from '@/layouts/app/AppHeaderLayout.svelte';
 
     export let stock: any;
     export let metrics: any[];

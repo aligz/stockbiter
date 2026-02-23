@@ -18,9 +18,9 @@
         SidebarMenuItem,
     } from '@/components/ui/sidebar';
     import { toUrl } from '@/lib/utils';
-    import type { NavItem } from '@/types';
     import { home as dashboard } from '@/routes';
     import { index as stocks } from '@/routes/stocks';
+    import type { NavItem } from '@/types';
 
     let {
         children,

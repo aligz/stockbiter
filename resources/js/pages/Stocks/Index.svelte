@@ -1,10 +1,7 @@
 <script lang="ts">
-    import AppHeaderLayout from '@/layouts/app/AppHeaderLayout.svelte';
     import { router, inertia } from '@inertiajs/svelte';
-    import {
-        store as storeRoute,
-        destroy as destroyRoute,
-    } from '@/actions/App/Http/Controllers/StockController';
+    import { store as storeRoute } from '@/actions/App/Http/Controllers/StockController';
+    import AppHeaderLayout from '@/layouts/app/AppHeaderLayout.svelte';
 
     export let stocks: any[] = [];
     export let errors: any = {};
@@ -12,17 +9,77 @@
     let symbol = '';
     let processing = false;
     let searchQuery = '';
+    let selectedBroker = '';
+    let sortColumn: 'target_r1' | 'target_max' | 'bandar_avg' | null = null;
+    let sortDirection: 'asc' | 'desc' = 'desc';
 
-    $: filteredStocks = stocks.filter(
-        (s) =>
-            s.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (s.company_name &&
-                s.company_name
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase())) ||
-            (s.sector &&
-                s.sector.toLowerCase().includes(searchQuery.toLowerCase())),
-    );
+    function getSortValue(
+        stock: any,
+        col: 'target_r1' | 'target_max' | 'bandar_avg',
+    ) {
+        if (col === 'target_r1') {
+            if (!stock.target_r1 || !stock.prev_close) return -9999;
+            return (
+                ((stock.target_r1 - stock.prev_close) / stock.prev_close) * 100
+            );
+        } else if (col === 'target_max') {
+            if (!stock.target_max || !stock.prev_close) return -9999;
+            return (
+                ((stock.target_max - stock.prev_close) / stock.prev_close) * 100
+            );
+        } else if (col === 'bandar_avg') {
+            if (!stock.prev_close || !stock.bandar_avg) return -9999;
+            return (
+                ((stock.prev_close - stock.bandar_avg) / stock.bandar_avg) * 100
+            );
+        }
+        return 0;
+    }
+
+    function handleSort(col: 'target_r1' | 'target_max' | 'bandar_avg') {
+        if (sortColumn === col) {
+            if (sortDirection === 'desc') {
+                sortDirection = 'asc';
+            } else {
+                sortColumn = null;
+                sortDirection = 'desc';
+            }
+        } else {
+            sortColumn = col;
+            sortDirection = 'desc';
+        }
+    }
+
+    $: uniqueBrokers = [
+        ...new Set(stocks.map((s) => s.bandar_code).filter(Boolean)),
+    ].sort();
+
+    $: filteredStocks = stocks
+        .filter((s) => {
+            const matchesSearch =
+                s.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (s.company_name &&
+                    s.company_name
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase())) ||
+                (s.sector &&
+                    s.sector.toLowerCase().includes(searchQuery.toLowerCase()));
+
+            const matchesBroker =
+                selectedBroker === '' || s.bandar_code === selectedBroker;
+
+            return matchesSearch && matchesBroker;
+        })
+        .sort((a, b) => {
+            if (!sortColumn) return 0;
+
+            const valA = getSortValue(a, sortColumn);
+            const valB = getSortValue(b, sortColumn);
+
+            if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
 
     function submit() {
         processing = true;
@@ -38,12 +95,6 @@
                 },
             },
         );
-    }
-
-    function remove(stock: any) {
-        if (confirm(`Are you sure you want to remove ${stock.symbol}?`)) {
-            router.delete(destroyRoute.url(stock.id));
-        }
     }
 
     function calcPct(val: number, base: number) {
@@ -72,17 +123,30 @@
             </div>
 
             <div
-                class="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 px-4 sm:px-0"
+                class="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-4 sm:px-0"
             >
-                <div class="w-full md:w-1/3 relative">
-                    <input
-                        type="text"
-                        bind:value={searchQuery}
-                        maxlength="4"
-                        pattern="[a-zA-Z]+"
-                        placeholder="Search by symbol, name, or sector..."
-                        class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-white px-3 py-2 shadow-sm"
-                    />
+                <div class="flex flex-col sm:flex-row w-full md:w-1/2 gap-2">
+                    <div class="w-full relative flex-1">
+                        <input
+                            type="text"
+                            bind:value={searchQuery}
+                            maxlength="4"
+                            pattern="[a-zA-Z]+"
+                            placeholder="Search by symbol, name, or sector..."
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-white px-3 py-2 shadow-sm"
+                        />
+                    </div>
+                    <div class="w-full sm:w-48 relative">
+                        <select
+                            bind:value={selectedBroker}
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:text-white px-3 py-2 shadow-sm"
+                        >
+                            <option value="">All Brokers</option>
+                            {#each uniqueBrokers as broker (broker)}
+                                <option value={broker}>{broker}</option>
+                            {/each}
+                        </select>
+                    </div>
                 </div>
 
                 <form
@@ -142,13 +206,23 @@
                                 >
                                 <th
                                     scope="col"
-                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Target R1</th
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-900 dark:hover:text-white select-none"
+                                    on:click={() => handleSort('target_r1')}
+                                    >Target R1 {sortColumn === 'target_r1'
+                                        ? sortDirection === 'desc'
+                                            ? '↓'
+                                            : '↑'
+                                        : ''}</th
                                 >
                                 <th
                                     scope="col"
-                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Target Max</th
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-900 dark:hover:text-white select-none"
+                                    on:click={() => handleSort('target_max')}
+                                    >Target Max {sortColumn === 'target_max'
+                                        ? sortDirection === 'desc'
+                                            ? '↓'
+                                            : '↑'
+                                        : ''}</th
                                 >
                                 <th
                                     scope="col"
@@ -172,8 +246,13 @@
                                 >
                                 <th
                                     scope="col"
-                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Avg Bandar</th
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-900 dark:hover:text-white select-none"
+                                    on:click={() => handleSort('bandar_avg')}
+                                    >Avg Bandar {sortColumn === 'bandar_avg'
+                                        ? sortDirection === 'desc'
+                                            ? '↓'
+                                            : '↑'
+                                        : ''}</th
                                 >
                                 <!-- <th
                                     scope="col"
