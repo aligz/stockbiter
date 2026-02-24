@@ -234,17 +234,7 @@
                                 <th
                                     scope="col"
                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Price</th
-                                >
-                                <th
-                                    scope="col"
-                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Change</th
-                                >
-                                <th
-                                    scope="col"
-                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Day High</th
+                                    >Harga Open</th
                                 >
                                 <th
                                     scope="col"
@@ -259,12 +249,27 @@
                                 <th
                                     scope="col"
                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Bandar Vol</th
+                                    >Max Harga</th
                                 >
                                 <th
                                     scope="col"
                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Bandar Avg</th
+                                    >Close Harga</th
+                                >
+                                <th
+                                    scope="col"
+                                    class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Bandar</th
+                                >
+                                <th
+                                    scope="col"
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Vol Bandar</th
+                                >
+                                <th
+                                    scope="col"
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Avg Bandar</th
                                 >
                             </tr>
                         </thead>
@@ -276,63 +281,99 @@
                                     class="hover:bg-gray-50 dark:hover:bg-gray-700/25 transition-colors"
                                 >
                                     <td
-                                        class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium"
-                                        >{formatDate(metric.date)}</td
+                                        class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white"
                                     >
-                                    <td
-                                        class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium {metric.change >
-                                        0
-                                            ? 'text-green-500'
-                                            : metric.change < 0
-                                              ? 'text-red-500'
-                                              : 'text-gray-900 dark:text-white'}"
-                                        >{formatNumber(metric.price)}</td
-                                    >
-                                    <td
-                                        class="px-4 py-3 whitespace-nowrap text-sm text-right {metric.change_percentage >
-                                        0
-                                            ? 'text-green-500'
-                                            : metric.change_percentage < 0
-                                              ? 'text-red-500'
-                                              : 'text-gray-500'}"
-                                    >
-                                        {metric.change > 0
-                                            ? '+'
-                                            : ''}{formatNumber(metric.change)} ({metric.change >
-                                        0
-                                            ? '+'
-                                            : ''}{metric.change_percentage}%)
+                                        {formatDate(metric.date)}
                                     </td>
                                     <td
-                                        class="px-4 py-3 whitespace-nowrap text-sm text-right text-orange-500 font-bold"
-                                        >{formatNumber(metric.day_high)}</td
+                                        class="px-4 py-4 whitespace-nowrap text-right text-base font-bold text-gray-900 dark:text-white"
                                     >
+                                        {formatNumber(metric.price - metric.change)}
+                                    </td>
                                     <td
-                                        class="px-4 py-3 whitespace-nowrap text-sm text-right font-bold text-green-500"
-                                        >{formatNumber(metric.target_r1)}</td
+                                        class="px-4 py-4 whitespace-nowrap text-right"
                                     >
+                                        <div class="flex flex-col">
+                                            <span class="text-base font-bold text-green-500"
+                                                >{formatNumber(metric.target_r1)}</span
+                                            >
+                                            <span class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(metric.target_r1, metric.price - metric.change) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
                                     <td
-                                        class="px-4 py-3 whitespace-nowrap text-sm text-right font-bold text-red-500"
-                                        >{formatNumber(metric.target_price)}</td
+                                        class="px-4 py-4 whitespace-nowrap text-right"
                                     >
+                                        <div class="flex flex-col">
+                                            <span class="text-base font-bold text-red-500"
+                                                >{formatNumber(metric.target_price)}</span
+                                            >
+                                            <span class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(metric.target_price, metric.price - metric.change) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
                                     <td
-                                        class="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white"
-                                        >{formatNumber(
-                                            metric.bandar_volume,
-                                            'en-US',
-                                        )}</td
+                                        class="px-4 py-4 whitespace-nowrap text-right"
                                     >
+                                        <div class="flex flex-col">
+                                            <span class="text-base font-bold text-orange-500"
+                                                >{formatNumber(metric.day_high)}</span
+                                            >
+                                            <span class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(metric.day_high, metric.price - metric.change) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
                                     <td
-                                        class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium text-gray-900 dark:text-white"
-                                        >{formatNumber(
-                                            metric.bandar_avg_price,
-                                        )}</td
+                                        class="px-4 py-4 whitespace-nowrap text-right"
                                     >
+                                        <div class="flex flex-col">
+                                            <span class="text-base font-bold text-yellow-500"
+                                                >{formatNumber(metric.price)}</span
+                                            >
+                                            <span class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(metric.price, metric.price - metric.change) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-center"
+                                    >
+                                        <div class="flex items-center justify-center space-x-1">
+                                            <span class="text-sm font-bold text-gray-900 dark:text-white"
+                                                >{metric.bandar_code ?? '-'}</span
+                                            >
+                                            {#if metric.bandar_status}
+                                                <span class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                                    {metric.bandar_status}
+                                                </span>
+                                            {/if}
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white"
+                                    >
+                                        {formatNumber(metric.bandar_volume, 'en-US')}
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-right"
+                                    >
+                                        <div class="flex flex-col">
+                                            <span class="text-base font-bold text-gray-900 dark:text-white"
+                                                >{formatNumber(metric.bandar_avg_price)}</span
+                                            >
+                                            <span class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(metric.price - metric.change, metric.bandar_avg_price) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
                                 </tr>
                             {:else}
                                 <tr>
                                     <td
-                                        colspan="8"
+                                        colspan="9"
                                         class="px-6 py-8 text-center text-gray-500 dark:text-gray-400 text-sm"
                                     >
                                         No metrics history available.
