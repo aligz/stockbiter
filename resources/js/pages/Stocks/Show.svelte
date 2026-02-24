@@ -28,6 +28,39 @@
             year: 'numeric',
         });
     }
+
+    $: calcs = latestMetric
+        ? (() => {
+              const p = Number(latestMetric.price) || 0;
+              const fraksi = Number(latestMetric.fraksi) || 1;
+              const ara = Number(latestMetric.offer_highest) || p;
+              const arb = Number(latestMetric.bid_lowest) || p;
+
+              let totalPapan = (ara - arb) / fraksi;
+              if (totalPapan === 0) totalPapan = 1;
+
+              const totalBidInput =
+                  (Number(latestMetric.total_bid_volume) || 0) / 100;
+              const totalOfferInput =
+                  (Number(latestMetric.total_offer_volume) || 0) / 100;
+
+              let rata2 = (totalBidInput + totalOfferInput) / totalPapan;
+              if (rata2 === 0) rata2 = 1;
+
+              const bandarAvg = Number(latestMetric.bandar_avg_price) || 0;
+              const bandarVol = Number(latestMetric.bandar_volume) || 0;
+
+              const a = bandarAvg * 0.05;
+              const p_val = rata2 > 1 ? bandarVol / rata2 : a;
+
+              return {
+                  totalPapan: Math.round(totalPapan),
+                  rata2: Math.round(rata2),
+                  a: Math.round(a),
+                  p_val: Math.round(p_val),
+              };
+          })()
+        : null;
 </script>
 
 <svelte:head>
@@ -104,105 +137,315 @@
             </div>
 
             {#if latestMetric}
-                <div
-                    class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700 mb-8 p-6"
-                >
+                <div class="mb-4 flex items-center justify-between">
                     <h2
-                        class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+                        class="text-lg font-semibold text-gray-900 dark:text-white"
                     >
-                        Latest Analysis ({formatDate(latestMetric.date)})
+                        Latest Analysis <span
+                            class="text-sm font-normal text-gray-500"
+                            >({formatDate(latestMetric.date)})</span
+                        >
                     </h2>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Target R1
-                            </p>
-                            <p class="text-xl font-bold text-green-500">
-                                {formatNumber(latestMetric.target_r1)}
-                            </p>
-                            <p class="text-xs text-gray-500">
-                                {calcPct(
-                                    latestMetric.target_r1,
-                                    latestMetric.price - latestMetric.change,
-                                ) ?? '-'}
-                            </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Top Broker Card -->
+                    <div
+                        class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-100 dark:border-gray-700"
+                    >
+                        <h3
+                            class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4"
+                        >
+                            Top Broker
+                        </h3>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mb-2"
+                                >
+                                    Bandar
+                                </p>
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-500 text-white text-sm font-bold"
+                                >
+                                    {latestMetric.bandar_code ?? '-'}
+                                </span>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mb-2"
+                                >
+                                    Barang
+                                </p>
+                                <p
+                                    class="text-sm font-bold text-gray-900 dark:text-white"
+                                >
+                                    {formatNumber(
+                                        latestMetric.bandar_volume,
+                                        'en-US',
+                                    )}
+                                    <span
+                                        class="font-normal text-xs text-gray-500"
+                                        >lot</span
+                                    >
+                                </p>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mb-2"
+                                >
+                                    Avg Harga
+                                </p>
+                                <p
+                                    class="text-sm font-bold text-gray-900 dark:text-white"
+                                >
+                                    Rp {formatNumber(
+                                        latestMetric.bandar_avg_price,
+                                    )}
+                                </p>
+                                <p
+                                    class="text-xs font-medium text-gray-500 mt-0.5"
+                                >
+                                    {calcPct(
+                                        latestMetric.price,
+                                        latestMetric.bandar_avg_price,
+                                    ) ?? '-'}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Target Max
-                            </p>
-                            <p class="text-xl font-bold text-red-500">
-                                {formatNumber(latestMetric.target_price)}
-                            </p>
-                            <p class="text-xs text-gray-500">
-                                {calcPct(
-                                    latestMetric.target_price,
-                                    latestMetric.price - latestMetric.change,
-                                ) ?? '-'}
-                            </p>
+                    </div>
+
+                    <!-- Market Data Card -->
+                    <div
+                        class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-100 dark:border-gray-700"
+                    >
+                        <h3
+                            class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4"
+                        >
+                            Market Data
+                        </h3>
+                        <div class="grid grid-cols-3 gap-y-4 gap-x-4">
+                            <div>
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mb-1"
+                                >
+                                    Harga
+                                </p>
+                                <p
+                                    class="text-sm font-bold text-gray-900 dark:text-white"
+                                >
+                                    Rp {formatNumber(latestMetric.price)}
+                                </p>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mb-1"
+                                >
+                                    Offer Max
+                                </p>
+                                <p
+                                    class="text-sm font-bold text-gray-900 dark:text-white"
+                                >
+                                    Rp {formatNumber(
+                                        latestMetric.offer_highest,
+                                    )}
+                                </p>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mb-1"
+                                >
+                                    Bid Min
+                                </p>
+                                <p
+                                    class="text-sm font-bold text-gray-900 dark:text-white"
+                                >
+                                    Rp {formatNumber(latestMetric.bid_lowest)}
+                                </p>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mb-1"
+                                >
+                                    Fraksi
+                                </p>
+                                <p
+                                    class="text-sm font-bold text-gray-900 dark:text-white"
+                                >
+                                    {formatNumber(latestMetric.fraksi)}
+                                </p>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mb-1"
+                                >
+                                    Total Bid
+                                </p>
+                                <p
+                                    class="text-sm font-bold text-gray-900 dark:text-white"
+                                >
+                                    {formatNumber(
+                                        latestMetric.total_bid_volume,
+                                        'en-US',
+                                    )}
+                                </p>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mb-1"
+                                >
+                                    Total Offer
+                                </p>
+                                <p
+                                    class="text-sm font-bold text-gray-900 dark:text-white"
+                                >
+                                    {formatNumber(
+                                        latestMetric.total_offer_volume,
+                                        'en-US',
+                                    )}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Margin of Safety (MoS)
-                            </p>
-                            <p
-                                class="text-xl font-bold {latestMetric.mos > 0
-                                    ? 'text-green-500'
-                                    : 'text-red-500'}"
+                    </div>
+
+                    <!-- Calculations Card -->
+                    <div
+                        class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-100 dark:border-gray-700"
+                    >
+                        <h3
+                            class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-4"
+                        >
+                            Calculations
+                        </h3>
+                        {#if calcs}
+                            <div class="grid grid-cols-2 gap-y-4 gap-x-4">
+                                <div>
+                                    <p
+                                        class="text-xs text-gray-500 dark:text-gray-400 mb-1 uppercase"
+                                    >
+                                        Total Papan
+                                    </p>
+                                    <p
+                                        class="text-sm font-bold text-gray-900 dark:text-white"
+                                    >
+                                        {formatNumber(calcs.totalPapan)}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p
+                                        class="text-xs text-gray-500 dark:text-gray-400 mb-1 uppercase"
+                                    >
+                                        Rata² Bid/Offer
+                                    </p>
+                                    <p
+                                        class="text-sm font-bold text-gray-900 dark:text-white"
+                                    >
+                                        {formatNumber(calcs.rata2)}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p
+                                        class="text-xs text-gray-500 dark:text-gray-400 mb-1 uppercase"
+                                    >
+                                        A (5% Avg Bandar)
+                                    </p>
+                                    <p
+                                        class="text-sm font-bold text-gray-900 dark:text-white"
+                                    >
+                                        {formatNumber(calcs.a)}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p
+                                        class="text-xs text-gray-500 dark:text-gray-400 mb-1 uppercase"
+                                    >
+                                        P (Barang/Avg)
+                                    </p>
+                                    <p
+                                        class="text-sm font-bold text-gray-900 dark:text-white"
+                                    >
+                                        {formatNumber(calcs.p_val)}
+                                    </p>
+                                </div>
+                            </div>
+                        {/if}
+                    </div>
+
+                    <!-- Target Prices Card -->
+                    <div
+                        class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 border border-gray-100 dark:border-gray-700"
+                    >
+                        <div class="flex justify-between items-center mb-4">
+                            <h3
+                                class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider"
                             >
-                                {formatNumber(latestMetric.mos)}%
-                            </p>
+                                Target Prices
+                            </h3>
+                            <div class="flex items-center space-x-2">
+                                <span
+                                    class="text-xs text-gray-500 font-medium tracking-wider"
+                                    >ACTION</span
+                                >
+                                <span
+                                    class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800"
+                                >
+                                    {latestMetric.target_action ?? '-'}
+                                </span>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Action
-                            </p>
-                            <p class="text-xl font-bold text-indigo-500">
-                                {latestMetric.target_action ?? '-'}
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Bandar Code
-                            </p>
-                            <p
-                                class="text-xl font-bold text-gray-900 dark:text-white"
-                            >
-                                {latestMetric.bandar_code ?? '-'}
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Bandar Status
-                            </p>
-                            <p
-                                class="text-xl font-bold text-gray-900 dark:text-white"
-                            >
-                                {latestMetric.bandar_status ?? '-'}
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Bandar Vol
-                            </p>
-                            <p
-                                class="text-xl font-bold text-gray-900 dark:text-white"
-                            >
-                                {formatNumber(
-                                    latestMetric.bandar_volume,
-                                    'en-US',
-                                )}
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                Bandar Avg
-                            </p>
-                            <p
-                                class="text-xl font-bold text-gray-900 dark:text-white"
-                            >
-                                {formatNumber(latestMetric.bandar_avg_price)}
-                            </p>
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="flex flex-col items-center">
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide"
+                                >
+                                    Target Realistis
+                                </p>
+                                <div
+                                    class="px-6 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/50 min-w-[120px]"
+                                >
+                                    <p
+                                        class="text-xl font-bold text-green-700 dark:text-green-400"
+                                    >
+                                        {formatNumber(latestMetric.target_r1)}
+                                    </p>
+                                </div>
+                                <p
+                                    class="text-xs font-bold text-green-600 dark:text-green-500 mt-2"
+                                >
+                                    {calcPct(
+                                        latestMetric.target_r1,
+                                        latestMetric.price -
+                                            latestMetric.change,
+                                    ) ?? '-'}
+                                </p>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide"
+                                >
+                                    Target Max
+                                </p>
+                                <div
+                                    class="px-6 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800/50 min-w-[120px]"
+                                >
+                                    <p
+                                        class="text-xl font-bold text-red-700 dark:text-red-400"
+                                    >
+                                        {formatNumber(
+                                            latestMetric.target_price,
+                                        )}
+                                    </p>
+                                </div>
+                                <p
+                                    class="text-xs font-bold text-green-600 dark:text-green-500 mt-2"
+                                >
+                                    {calcPct(
+                                        latestMetric.target_price,
+                                        latestMetric.price -
+                                            latestMetric.change,
+                                    ) ?? '-'}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -288,17 +531,27 @@
                                     <td
                                         class="px-4 py-4 whitespace-nowrap text-right text-base font-bold text-gray-900 dark:text-white"
                                     >
-                                        {formatNumber(metric.price - metric.change)}
+                                        {formatNumber(
+                                            metric.price - metric.change,
+                                        )}
                                     </td>
                                     <td
                                         class="px-4 py-4 whitespace-nowrap text-right"
                                     >
                                         <div class="flex flex-col">
-                                            <span class="text-base font-bold text-green-500"
-                                                >{formatNumber(metric.target_r1)}</span
+                                            <span
+                                                class="text-base font-bold text-green-500"
+                                                >{formatNumber(
+                                                    metric.target_r1,
+                                                )}</span
                                             >
-                                            <span class="text-xs text-gray-500 dark:text-gray-400"
-                                                >{calcPct(metric.target_r1, metric.price - metric.change) ?? '-'}</span
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(
+                                                    metric.target_r1,
+                                                    metric.price -
+                                                        metric.change,
+                                                ) ?? '-'}</span
                                             >
                                         </div>
                                     </td>
@@ -306,23 +559,19 @@
                                         class="px-4 py-4 whitespace-nowrap text-right"
                                     >
                                         <div class="flex flex-col">
-                                            <span class="text-base font-bold text-red-500"
-                                                >{formatNumber(metric.target_price)}</span
+                                            <span
+                                                class="text-base font-bold text-red-500"
+                                                >{formatNumber(
+                                                    metric.target_price,
+                                                )}</span
                                             >
-                                            <span class="text-xs text-gray-500 dark:text-gray-400"
-                                                >{calcPct(metric.target_price, metric.price - metric.change) ?? '-'}</span
-                                            >
-                                        </div>
-                                    </td>
-                                    <td
-                                        class="px-4 py-4 whitespace-nowrap text-right"
-                                    >
-                                        <div class="flex flex-col">
-                                            <span class="text-base font-bold text-orange-500"
-                                                >{formatNumber(metric.day_high)}</span
-                                            >
-                                            <span class="text-xs text-gray-500 dark:text-gray-400"
-                                                >{calcPct(metric.day_high, metric.price - metric.change) ?? '-'}</span
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(
+                                                    metric.target_price,
+                                                    metric.price -
+                                                        metric.change,
+                                                ) ?? '-'}</span
                                             >
                                         </div>
                                     </td>
@@ -330,23 +579,57 @@
                                         class="px-4 py-4 whitespace-nowrap text-right"
                                     >
                                         <div class="flex flex-col">
-                                            <span class="text-base font-bold text-yellow-500"
-                                                >{formatNumber(metric.price)}</span
+                                            <span
+                                                class="text-base font-bold text-orange-500"
+                                                >{formatNumber(
+                                                    metric.day_high,
+                                                )}</span
                                             >
-                                            <span class="text-xs text-gray-500 dark:text-gray-400"
-                                                >{calcPct(metric.price, metric.price - metric.change) ?? '-'}</span
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(
+                                                    metric.day_high,
+                                                    metric.price -
+                                                        metric.change,
+                                                ) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-right"
+                                    >
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-base font-bold text-yellow-500"
+                                                >{formatNumber(
+                                                    metric.price,
+                                                )}</span
+                                            >
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(
+                                                    metric.price,
+                                                    metric.price -
+                                                        metric.change,
+                                                ) ?? '-'}</span
                                             >
                                         </div>
                                     </td>
                                     <td
                                         class="px-4 py-4 whitespace-nowrap text-center"
                                     >
-                                        <div class="flex items-center justify-center space-x-1">
-                                            <span class="text-sm font-bold text-gray-900 dark:text-white"
-                                                >{metric.bandar_code ?? '-'}</span
+                                        <div
+                                            class="flex items-center justify-center space-x-1"
+                                        >
+                                            <span
+                                                class="text-sm font-bold text-gray-900 dark:text-white"
+                                                >{metric.bandar_code ??
+                                                    '-'}</span
                                             >
                                             {#if metric.bandar_status}
-                                                <span class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                                <span
+                                                    class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                                >
                                                     {metric.bandar_status}
                                                 </span>
                                             {/if}
@@ -355,17 +638,28 @@
                                     <td
                                         class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white"
                                     >
-                                        {formatNumber(metric.bandar_volume, 'en-US')}
+                                        {formatNumber(
+                                            metric.bandar_volume,
+                                            'en-US',
+                                        )}
                                     </td>
                                     <td
                                         class="px-4 py-4 whitespace-nowrap text-right"
                                     >
                                         <div class="flex flex-col">
-                                            <span class="text-base font-bold text-gray-900 dark:text-white"
-                                                >{formatNumber(metric.bandar_avg_price)}</span
+                                            <span
+                                                class="text-base font-bold text-gray-900 dark:text-white"
+                                                >{formatNumber(
+                                                    metric.bandar_avg_price,
+                                                )}</span
                                             >
-                                            <span class="text-xs text-gray-500 dark:text-gray-400"
-                                                >{calcPct(metric.price - metric.change, metric.bandar_avg_price) ?? '-'}</span
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(
+                                                    metric.price -
+                                                        metric.change,
+                                                    metric.bandar_avg_price,
+                                                ) ?? '-'}</span
                                             >
                                         </div>
                                     </td>
