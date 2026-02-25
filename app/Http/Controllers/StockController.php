@@ -31,6 +31,7 @@ class StockController extends Controller
                     'sector' => $stock->sector,
                     'price' => $price,
                     'prev_close' => $prevClose,
+                    'change' => $metric ? $metric->change : null,
                     'change_percentage' => $metric ? $metric->change_percentage : null,
                     'target_r1' => $metric ? $metric->target_r1 : null,
                     'target_max' => $metric ? $metric->target_price : null,
@@ -42,7 +43,7 @@ class StockController extends Controller
                     'bandar_status' => $metric ? $metric->bandar_status : null,
                     'bandar_vol' => $metric ? $metric->bandar_volume : null,
                     'bandar_avg' => $metric ? $metric->bandar_avg_price : null,
-                    'last_updated' => $metric ? $metric->date->format('d-M') : 'Pending Sync',
+                    'last_updated' => $metric ? $metric->date->format('d M') : 'Pending Sync',
                 ];
             });
 

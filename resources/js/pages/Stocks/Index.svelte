@@ -203,7 +203,17 @@
                                 <th
                                     scope="col"
                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Harga Open</th
+                                    >Prev</th
+                                >
+                                <th
+                                    scope="col"
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Harga</th
+                                >
+                                <th
+                                    scope="col"
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >Harga Tertinggi</th
                                 >
                                 <th
                                     scope="col"
@@ -227,16 +237,6 @@
                                 >
                                 <th
                                     scope="col"
-                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Max Harga</th
-                                >
-                                <th
-                                    scope="col"
-                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Close Harga</th
-                                >
-                                <th
-                                    scope="col"
                                     class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                                     >Bandar</th
                                 >
@@ -255,11 +255,6 @@
                                             : '↑'
                                         : ''}</th
                                 >
-                                <!-- <th
-                                    scope="col"
-                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    ><span class="sr-only">Manage</span></th
-                                > -->
                             </tr>
                         </thead>
                         <tbody
@@ -301,32 +296,24 @@
                                         </div>
                                     </td>
                                     <td
-                                        class="px-4 py-4 whitespace-nowrap text-right text-base font-bold text-gray-900 dark:text-white"
-                                    >
-                                        {stock.prev_close
-                                            ? Number(
-                                                  stock.prev_close,
-                                              ).toLocaleString('id-ID')
-                                            : '-'}
-                                    </td>
-                                    <td
-                                        class="px-4 py-4 whitespace-nowrap text-right"
+                                        class="px-4 py-4 whitespace-nowrap text-right text-base text-gray-900 dark:text-white"
                                     >
                                         <div class="flex flex-col">
-                                            <span
-                                                class="text-base font-bold text-green-500"
-                                                >{stock.target_r1
+                                            <span class="text-base font-bold"
+                                                >{stock.prev_close
                                                     ? Number(
-                                                          stock.target_r1,
+                                                          stock.prev_close,
                                                       ).toLocaleString('id-ID')
                                                     : '-'}</span
                                             >
                                             <span
                                                 class="text-xs text-gray-500 dark:text-gray-400"
-                                                >{calcPct(
-                                                    stock.target_r1,
-                                                    stock.prev_close,
-                                                ) ?? '-'}</span
+                                            >
+                                                {stock.change > 0
+                                                    ? '+'
+                                                    : ''}{Number(
+                                                    stock.change,
+                                                ).toLocaleString('id-ID')}</span
                                             >
                                         </div>
                                     </td>
@@ -335,17 +322,18 @@
                                     >
                                         <div class="flex flex-col">
                                             <span
-                                                class="text-base font-bold text-red-500"
-                                                >{stock.target_max
+                                                class="text-base font-bold text-yellow-500"
+                                                >{stock.price
                                                     ? Number(
-                                                          stock.target_max,
+                                                          stock.price,
                                                       ).toLocaleString('id-ID')
                                                     : '-'}</span
                                             >
                                             <span
                                                 class="text-xs text-gray-500 dark:text-gray-400"
-                                                >{calcPct(
-                                                    stock.target_max,
+                                            >
+                                                {calcPct(
+                                                    stock.price,
                                                     stock.prev_close,
                                                 ) ?? '-'}</span
                                             >
@@ -377,18 +365,39 @@
                                     >
                                         <div class="flex flex-col">
                                             <span
-                                                class="text-base font-bold text-yellow-500"
-                                                >{stock.close
+                                                class="text-base font-bold text-green-500"
+                                                >{stock.target_r1
                                                     ? Number(
-                                                          stock.close,
+                                                          stock.target_r1,
                                                       ).toLocaleString('id-ID')
                                                     : '-'}</span
                                             >
                                             <span
                                                 class="text-xs text-gray-500 dark:text-gray-400"
                                                 >{calcPct(
+                                                    stock.target_r1,
                                                     stock.close,
-                                                    stock.prev_close,
+                                                ) ?? '-'}</span
+                                            >
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="px-4 py-4 whitespace-nowrap text-right"
+                                    >
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-base font-bold text-red-500"
+                                                >{stock.target_max
+                                                    ? Number(
+                                                          stock.target_max,
+                                                      ).toLocaleString('id-ID')
+                                                    : '-'}</span
+                                            >
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                                >{calcPct(
+                                                    stock.target_max,
+                                                    stock.close,
                                                 ) ?? '-'}</span
                                             >
                                         </div>
@@ -443,28 +452,6 @@
                                             >
                                         </div>
                                     </td>
-                                    <!-- <td
-                                        class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium"
-                                    > -->
-                                    <!-- <button
-                                            on:click={() => remove(stock)}
-                                            class="text-red-500 hover:text-red-600 transition-colors"
-                                            title="Delete"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                class="h-5 w-5"
-                                                viewBox="0 0 20 20"
-                                                fill="currentColor"
-                                            >
-                                                <path
-                                                    fill-rule="evenodd"
-                                                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                                    clip-rule="evenodd"
-                                                />
-                                            </svg>
-                                        </button> -->
-                                    <!-- </td> -->
                                 </tr>
                             {:else}
                                 <tr>

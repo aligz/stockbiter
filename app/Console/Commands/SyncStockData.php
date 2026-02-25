@@ -31,7 +31,7 @@ class SyncStockData extends Command
     public function handle(AdimologyService $adimologyService)
     {
         $symbol = $this->argument('symbol');
-        $today = $this->argument('date') ?? '2026-02-20';
+        $today = $this->argument('date') ?? now()->format('Y-m-d');
 
         // 1. Initialize Service (will auto-load token from Storage)
         try {
