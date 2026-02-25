@@ -213,7 +213,7 @@
                                 <th
                                     scope="col"
                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >Harga Tertinggi</th
+                                    >Tertinggi</th
                                 >
                                 <th
                                     scope="col"
@@ -299,7 +299,8 @@
                                         class="px-4 py-4 whitespace-nowrap text-right text-base text-gray-900 dark:text-white"
                                     >
                                         <div class="flex flex-col">
-                                            <span class="text-base font-bold"
+                                            <span
+                                                class="text-base font-bold text-yellow-500"
                                                 >{stock.prev_close
                                                     ? Number(
                                                           stock.prev_close,
@@ -321,8 +322,7 @@
                                         class="px-4 py-4 whitespace-nowrap text-right"
                                     >
                                         <div class="flex flex-col">
-                                            <span
-                                                class="text-base font-bold text-yellow-500"
+                                            <span class="text-base font-bold"
                                                 >{stock.price
                                                     ? Number(
                                                           stock.price,
